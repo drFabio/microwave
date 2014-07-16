@@ -1,0 +1,22 @@
+{
+  "author": "Fabio Oliveira Costa <fabio@dexus.com.br>",
+  "name": "microwave",
+  "license": "MIT",
+  "description": "A Transformation tool from Pojo  to Pojo  for ETL purposes",
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/drFabio/microwave.git"
+  },
+  "scripts": {
+    "test": "mocha tests/Microwave.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+     "chai":"*"
+  },
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  }
+}
