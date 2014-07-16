@@ -107,6 +107,17 @@ describe('Transformation',function(){
 
 			expect(type).to.equal(Microwave.TYPE_SOURCE);
 		});
+		it('Should be able to recognize a source value with the current index as index',function(){
+			var type=transformer.getRuleType('$myExampleSource.$.thing');
+
+			expect(type).to.equal(Microwave.TYPE_SOURCE);
+		});
+		it('Should be able to recognize a source value with the a variable as index',function(){
+			var type=transformer.getRuleType('$myExampleSource[$otherSource.stuff].thing');
+
+			expect(type).to.equal(Microwave.TYPE_SOURCE);
+		});
+		
 		it('Should be  able to recognize already set functions',function(){
 			var type=transformer.getRuleType('$someFunction(10,20,$myExampleSource.thing2)');
 			expect(type).to.equal(Microwave.TYPE_SET_FUNCTION);
@@ -120,5 +131,28 @@ describe('Transformation',function(){
 				expect(type).to.equal(Microwave.TYPE_STRING_ARRAY);
 		});
 
+	});
+	describe.only('Source recognition',function(){
+		var transformer;
+		before(function(){
+			transformer=new Microwave();
+		});
+		it('Should be able to correctly separate a source',function(){
+			var data=transformer._getSourceComponentsAsArray('$a.b.c.d');
+			expect(data[0]).to.equal('$a');
+			expect(data[1]).to.equal('b');
+			expect(data[2]).to.equal('c');
+			expect(data[3]).to.equal('d');
+
+		});
+		it('Should be able to correctly separate a source that uses another source');
+	});
+	describe('Function execution',function(){
+		var transformer;
+		before(function(){
+			transformer=new Microwave();
+		})
+		it('Should be able to execute a normal function');
+		it('should be able to execute a set function');
 	});
 });
