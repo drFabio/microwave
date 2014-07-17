@@ -140,6 +140,26 @@ Microwave.prototype._getCleanEmbeddedSourceElement = function(sourceElement) {
 	var length=sourceElement.length;
 	return sourceElement.substr(1).substr(0,length-2);
 };
+Microwave.prototype._getNextComponentItem = function(currentData,currentComponent,currentIndex,cb) {
+	if(this._isSourceElementCurrentIndex(currentComponent)){
+			currentComponent=currentIndex;
+			cb(null,currentData[currentComponent]);
+			return;
+
+		}
+		else if(this._isSourceElmentAnotherSource(currentComponent)){
+		var sourceElement=this._getCleanEmbeddedSourceElement(currentComponent);
+
+		var sourceComponents=this._getSourceComponentsAsArray(sourceElement);
+		var hf=this._getSourceHandlerFunction(sourceComponents);
+		hf(currentIndex,currentComponent,function(err,currentComponent){
+			cb(err,currentData[currentComponent]);
+		});
+		return;
+	}
+	cb(null,currentData[currentComponent]);
+};
+
 /**
  * @todo clean code
  * @param  {[type]} sourceString [description]
@@ -157,36 +177,14 @@ Microwave.prototype._getSourceHandlerFunction = function(sourceComponents){
 		sourceElement=this._sources[plainName];
 	}
 	var self=this;
-	var getNextComponentItem=function(currentData,currentComponent,currentIndex,cb){
-		if(self._isSourceElementCurrentIndex(currentComponent)){
-			currentComponent=currentIndex;
-			cb(null,currentData[currentComponent]);
-			return;
 
-		}
-		else if(self._isSourceElmentAnotherSource(currentComponent)){
-			var sourceElement=self._getCleanEmbeddedSourceElement(currentComponent);
-
-			var sourceComponents=self._getSourceComponentsAsArray(sourceElement);
-			var hf=self._getSourceHandlerFunction(sourceComponents);
-			hf(currentIndex,currentComponent,function(err,currentComponent){
-				cb(err,currentData[currentComponent]);
-			});
-			return;
-		}
-		cb(null,currentData[currentComponent]);
-	}
 	//Removing the source identificator
 	sourceComponents.shift();
 	//First check if ti has a reference item
 	return	function(currentIndex,currentItem,cb) {
-		var currentData;
-		
+		var currentData=sourceElement;
 		if(isCurrentItem){
 			currentData=currentItem;
-		}
-		else{
-			currentData=sourceElement;
 		}
 		var walkComponent=function(){
 			var currentComponent=sourceComponents.shift();
@@ -194,15 +192,13 @@ Microwave.prototype._getSourceHandlerFunction = function(sourceComponents){
 				cb(null,currentData);
 			}
 			else{
-				getNextComponentItem(currentData,currentComponent,currentIndex,function(err,data){
+				self._getNextComponentItem(currentData,currentComponent,currentIndex,function(err,data){
 					currentData=data;
 					walkComponent();
 				});
 			}
 		}
 		walkComponent();
-
-
 	};	
 }
 Microwave.prototype.getRuleType = function(rule) {
