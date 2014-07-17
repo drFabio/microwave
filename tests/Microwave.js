@@ -238,4 +238,51 @@ describe('Transformation',function(){
 		});
 		
 	});
+	describe('#Proccess ',function(){
+		var transformer;
+		before(function(done){
+			transformer=new Microwave();
+			transformer.addSource('itemToLoop',[{'bar':{'baz':10}},{'bar':{'baz':20}},{'bar':{'baz':30}}]);
+			transformer.addSource('someSortOfMap',{10:'ten',20:'twenty',30:'thirty'});
+			var plusOneFunction=function (currentIndex,currentItem,cb){
+				var val=currentItem.bar.baz;
+				cb(null,val+1);
+			}
+			transformer.addFunction('plusOne',plusOneFunction);
+			var squareFunction=function(currentIndex,currentItem,cb){
+
+				var val=currentItem.bar.baz;
+				cb(null,val*val);
+			}
+			var mapFunction=function(currentIndex,currentItem,cb){
+				var val=currentItem.bar.baz;
+				cb(null,transformer.getSource('someSortOfMap')[val]);
+			}
+			var rule={
+				'squareOfBaz':squareFunction,
+				'theMapItem':mapFunction,
+				'constant':3,
+				'plus1':'$plusOne()'
+			};
+			var res=transformer.setRule(rule);
+			done();
+		})
+		it('Should be able to execute the full process',function(done){
+			transformer.execute('itemToLoop',function(err,data){
+				expect(data[0].constant).to.equal(3);
+				expect(data[1].constant).to.equal(3);
+				expect(data[2].constant).to.equal(3);
+				expect(data[0].plus1).to.equal(11);
+				expect(data[1].plus1).to.equal(21);
+				expect(data[2].plus1).to.equal(31);
+				expect(data[0].squareOfBaz).to.equal(100);
+				expect(data[1].squareOfBaz).to.equal(400);
+				expect(data[2].squareOfBaz).to.equal(900);
+				expect(data[0].theMapItem).to.equal('ten');
+				expect(data[1].theMapItem).to.equal('twenty');
+				expect(data[2].theMapItem).to.equal('thirty');
+				done();
+			});	
+		});
+	});
 });

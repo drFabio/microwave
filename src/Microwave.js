@@ -348,6 +348,7 @@ Microwave.prototype.execute = function(mainSource,cb) {
 			return ret;
 		}
 	}
+
 	var proccessSourceItemCb=function(err,data){
 		if(err){
 			cb(err);
@@ -358,7 +359,8 @@ Microwave.prototype.execute = function(mainSource,cb) {
 	}
 	var proccessCurrentIndex=function(){
 		var key=getNextKey();
-		if(key==false){
+
+		if(key===false){
 			cb(null,returnObject);
 			return;
 		}
