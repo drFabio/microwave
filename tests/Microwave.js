@@ -132,20 +132,58 @@ describe('Transformation',function(){
 		});
 
 	});
-	describe.only('Source recognition',function(){
+	describe('Source recognition',function(){
 		var transformer;
 		before(function(){
 			transformer=new Microwave();
-		});
-		it('Should be able to correctly separate a source',function(){
-			var data=transformer._getSourceComponentsAsArray('$a.b.c.d');
-			expect(data[0]).to.equal('$a');
-			expect(data[1]).to.equal('b');
-			expect(data[2]).to.equal('c');
-			expect(data[3]).to.equal('d');
+			transformer.addSource('a',{'b':{'c':{'d':10}}});
+			transformer.addSource('foo',{'bar':{'baz':'c'}});
 
 		});
-		it('Should be able to correctly separate a source that uses another source');
+		describe('#Simple case ',function(){
+			var components;
+			it('Should be able to separate a source',function(){
+				components=transformer._getSourceComponentsAsArray('$a.b.c.d');
+				expect(components[0]).to.equal('$a');
+				expect(components[1]).to.equal('b');
+				expect(components[2]).to.equal('c');
+				expect(components[3]).to.equal('d');
+
+			});
+			it('Should be able to interpret source variables',function(done){
+				var funcToExecute=transformer._getSourceHandlerFunction(components);
+				funcToExecute(null,null,function(err,res){
+					if(err){
+						done(err);
+						return;
+					}
+					expect(res).to.equal(10);
+					done();
+				});
+			});
+		});
+		describe('#Complex case',function(){
+			var components;
+
+			it('Should be able to correctly separate a source',function(){
+				components=transformer._getSourceComponentsAsArray('$a.b[$foo.bar.baz].d');
+				expect(components[0]).to.equal('$a');
+				expect(components[1]).to.equal('b');
+				expect(components[2]).to.equal('[$foo.bar.baz]');
+				expect(components[3]).to.equal('d');
+			});
+			it('Should be able to interpret source variables',function(done){
+				var funcToExecute=transformer._getSourceHandlerFunction(components);
+				funcToExecute(null,null,function(err,res){
+					if(err){
+						done(err);
+						return;
+					}
+					expect(res).to.equal(10);
+					done();
+				});
+			});
+		});
 	});
 	describe('Function execution',function(){
 		var transformer;

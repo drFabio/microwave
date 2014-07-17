@@ -1,3 +1,25 @@
+/*The MIT License (MIT)
+
+Copyright (c) 2014 Fabio Oliveira Costa
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 function Microwave(){
 	this._sources={};
 	this._output={};
@@ -42,32 +64,38 @@ Microwave.prototype.addFunction = function(name,func) {
 Microwave.prototype.addFunctions = function(funcs) {
 	for(var name in funcs){
 		this.addFunction(name,funcs[name]);
-	}
+	}104
 	return true;
 };
 Microwave.prototype.setRule = function(rule) {
 	this._rule=rule;
-	this._parseRules();
 	return true;
 };
-Microwave.prototype._parseRules = function() {
-	this._parsedRules={};
-	var stringRulesMap={};
-	for(var x in rule){
-		//If it's not a string it's not a rule we should parse
-		if(typof(rule)==='string'){
-			var type=this.getRuleType(rule);
-			if(type===TYPE_PRIMITIVE_JS){
-				continue;
-			}
+// Microwave.prototype._parseRules = function() {
+// 	this._parsedRules={};
+// 	var stringRulesMap={};
+// 	for(var x in rule){
+// 		//If it's not a string it's not a rule we should parse
+// 		if(typof(rule)==='string'){
+// 			var type=this.getRuleType(rule);
+// 			if(type===TYPE_PRIMITIVE_JS){
+// 				continue;
+// 			}
 
-		}
-	}
-};
+// 		}
+// 	}
+// };
+// Microwave.prototype.getRuleData = function(ruleComponents) {
+// 	var self=this;
+// 	return function(currentIndex,currentItem,cb){
+
+// 	}
+// };
 
 Microwave.prototype._getSourceComponentsAsArray = function(sourceString) {
+	var self=this;
 	var getStartPositionForDotSearch=function(str){
-		if(str.indexOf('[')==0){
+		if(self._isSourceElmentAnotherSource(str)){
 			return str.indexOf(']');
 		}
 		return 0;
@@ -95,15 +123,85 @@ Microwave.prototype._getSourceComponentsAsArray = function(sourceString) {
 
 
 };
-Microwave.prototype._getSourceItem = function(sourceString){
-	var sourceComponents=this._getSourceComponentsAsArray(sourceString);
-	var length=sourceComponents.length;
-	
-	for(var i=0;i<length;i++){
+Microwave.prototype._isSourceElementCurrentItem = function(sourceElement) {
+	return sourceElement===Microwave.CONSTANT_CURREM_ITEM;
 
+};
+Microwave.prototype._isSourceElementCurrentIndex = function(sourceElement) {
+	return sourceElement===Microwave.CONSTANT_CURRENT_INDEX;
+};
+Microwave.prototype._isSourceElmentAnotherSource = function(sourceElement) {
+		return sourceElement.indexOf('[')==0;
+};
+Microwave.prototype._getSourceElementPlainName = function(sourceElement) {
+	return sourceElement.substr(1);
+};
+Microwave.prototype._getCleanEmbeddedSourceElement = function(sourceElement) {
+	var length=sourceElement.length;
+	return sourceElement.substr(1).substr(0,length-2);
+};
+/**
+ * @todo clean code
+ * @param  {[type]} sourceString [description]
+ * @return {[type]}              [description]
+ */
+Microwave.prototype._getSourceHandlerFunction = function(sourceComponents){
+	var length=sourceComponents.length;
+	var isCurrentItem=false;
+	var sourceElement;
+	if(this._isSourceElementCurrentItem(sourceComponents[0])){
+		isCurrentItem=true;
 	}
+	else{
+		var plainName=this._getSourceElementPlainName(sourceComponents[0]);
+		sourceElement=this._sources[plainName];
+	}
+	var self=this;
+	var getNextComponentItem=function(currentData,currentComponent,currentIndex,cb){
+		if(self._isSourceElementCurrentIndex(currentComponent)){
+			currentComponent=currentIndex;
+			cb(null,currentData[currentComponent]);
+			return;
+
+		}
+		else if(self._isSourceElmentAnotherSource(currentComponent)){
+			var sourceElement=self._getCleanEmbeddedSourceElement(currentComponent);
+
+			var sourceComponents=self._getSourceComponentsAsArray(sourceElement);
+			var hf=self._getSourceHandlerFunction(sourceComponents);
+			hf(currentIndex,currentComponent,function(err,currentComponent){
+				cb(err,currentData[currentComponent]);
+			});
+			return;
+		}
+		cb(null,currentData[currentComponent]);
+	}
+	//Removing the source identificator
+	sourceComponents.shift();
 	//First check if ti has a reference item
-	return	function(currentIndex,currentItem) {
+	return	function(currentIndex,currentItem,cb) {
+		var currentData;
+		
+		if(isCurrentItem){
+			currentData=currentItem;
+		}
+		else{
+			currentData=sourceElement;
+		}
+		var walkComponent=function(){
+			var currentComponent=sourceComponents.shift();
+			if(!currentComponent){
+				cb(null,currentData);
+			}
+			else{
+				getNextComponentItem(currentData,currentComponent,currentIndex,function(err,data){
+					currentData=data;
+					walkComponent();
+				});
+			}
+		}
+		walkComponent();
+
 
 	};	
 }
