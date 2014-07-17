@@ -189,6 +189,7 @@ describe('Transformation',function(){
 		var transformer;
 		before(function(){
 			transformer=new Microwave();
+		
 		})
 		it('Should be able to execute a normal function');
 		it('should be able to execute a set function');

@@ -268,14 +268,14 @@ Microwave.prototype.execute = function(mainSource) {
 		for(var i=0;i<length;i++){
 			var currentIndex=i;
 			var currentItem=sourceToTransform[i];
-			proccessItenFunction(currentItem,currentItem);
+			proccessItenFunction(currentIndex,currentItem);
 		}
 	}
 	else{
 		for(var x in sourceToTransform){
 			var currentIndex=x;
 			var currentItem=sourceToTransform[x];
-			proccessItenFunction(currentItem,currentItem);
+			proccessItenFunction(currentIndex,currentItem);
 		}
 	}
 };
