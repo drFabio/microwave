@@ -13,7 +13,9 @@
   },
   "dependencies": {},
   "devDependencies": {
-     "chai":"*"
+     "chai":"*",
+     "async":"*",
+     "lodash":"*"
   },
   "optionalDependencies": {},
   "engines": {

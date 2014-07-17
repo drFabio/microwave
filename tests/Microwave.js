@@ -50,12 +50,12 @@ describe('Transformation',function(){
 			var res=transformer.addSource(toAdd);
 			expect(res).to.be.true;
 		});
-		it('Should be able to add a function',function(){
+		it.skip('Should be able to add a function',function(){
 			var res=transformer.addFunction('sum',function(a,b){return a+b});
 			expect(res).to.be.true;
 
 		});
-		it('Should be able to add multiple functions',function(){
+		it.skip('Should be able to add multiple functions',function(){
 			var sub=function(a,b){
 					return a-b;
 			};
@@ -151,7 +151,7 @@ describe('Transformation',function(){
 
 			});
 			it('Should be able to interpret source variables',function(done){
-				var funcToExecute=transformer._getSourceHandlerFunction(components);
+				var funcToExecute=transformer._getSourceHandlerFunctionFromComponents(components);
 				funcToExecute(null,null,function(err,res){
 					if(err){
 						done(err);
@@ -173,7 +173,7 @@ describe('Transformation',function(){
 				expect(components[3]).to.equal('d');
 			});
 			it('Should be able to interpret source variables',function(done){
-				var funcToExecute=transformer._getSourceHandlerFunction(components);
+				var funcToExecute=transformer._getSourceHandlerFunctionFromComponents(components);
 				funcToExecute(null,null,function(err,res){
 					if(err){
 						done(err);
@@ -189,9 +189,39 @@ describe('Transformation',function(){
 		var transformer;
 		before(function(){
 			transformer=new Microwave();
-		
+			transformer.addSource('itemToLoop',[{'bar':{'baz':10}},{'bar':{'baz':20}},{'bar':{'baz':30}}]);
+			transformer.addSource('someSortOfMap',{10:'ten',20:'twenty',30:'thirty'});
+
+			var squareFunction=function(currentIndex,currentItem,cb){
+
+				var val=currentItem.bar.baz;
+				cb(null,val*val);
+			}
+			var mapFunction=function(currentIndex,currentItem,cb){
+				var val=currentItem.bar.baz;
+				cb(null,transformer.getSource('someSortOfMap')[val]);
+			}
+			var rule={
+				'squareOfBaz':squareFunction,
+				'theMapItem':mapFunction,
+				'constant':3
+			};
+			var res=transformer.setRule(rule);
+
 		})
-		it('Should be able to execute a normal function');
-		it('should be able to execute a set function');
+		it('Should be able to execute a normal function',function(done){
+			transformer._processSourceItem(transformer.getSource('itemToLoop'),0,function(err,data){
+				if(err){
+					done(err);
+					return;
+				}
+				expect(data['constant']).to.equal(3);
+				expect(data['squareOfBaz']).to.equal(100);
+				expect(data['theMapItem']).to.equal('ten');
+				done();
+			});
+
+		});
+		
 	});
 });
