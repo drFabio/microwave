@@ -45,7 +45,7 @@ Microwave.CONSTANT_CURREM_ITEM='$CURRENT';
  * @type {RegExp}
  */
 Microwave.REGEX_SOURCE=/^\$[A-Za-z]\w*(\.(\w+|\$)|\[.*\]).*$/;
-Microwave.REGEX_FUNCTION=/^\$[A-Za-z]\w+\((.*)\)$/;
+Microwave.REGEX_FUNCTION=/^\$[A-Za-z]\w+\(\)$/;
 Microwave.REGEX_ARRAY=/^\[.*\]$/;
 
 
@@ -92,6 +92,10 @@ Microwave.prototype._parseRules = function() {
 		else if(type===Microwave.TYPE_FUNCTION){
 			this._parsedRules[x]=rule;
 		}
+		else if(type===Microwave.TYPE_SET_FUNCTION){
+			var functionName=this.getFunctionCleanName(rule);
+			this._parsedRules[x]=this._functions[functionName];
+		}
 	}
 
 };
@@ -102,6 +106,11 @@ Microwave.prototype._parseRules = function() {
 // 	}
 // };
 
+Microwave.prototype.getFunctionCleanName = function(name) {
+	name=name.substr(1);
+	var length=name.length;
+	return name.substring(0,length-2);	
+};
 Microwave.prototype._getSourceComponentsAsArray = function(sourceString) {
 	var self=this;
 	var getStartPositionForDotSearch=function(str){

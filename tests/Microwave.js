@@ -50,12 +50,12 @@ describe('Transformation',function(){
 			var res=transformer.addSource(toAdd);
 			expect(res).to.be.true;
 		});
-		it.skip('Should be able to add a function',function(){
+		it('Should be able to add a function',function(){
 			var res=transformer.addFunction('sum',function(a,b){return a+b});
 			expect(res).to.be.true;
 
 		});
-		it.skip('Should be able to add multiple functions',function(){
+		it('Should be able to add multiple functions',function(){
 			var sub=function(a,b){
 					return a-b;
 			};
@@ -119,7 +119,7 @@ describe('Transformation',function(){
 		});
 		
 		it('Should be  able to recognize already set functions',function(){
-			var type=transformer.getRuleType('$someFunction(10,20,$myExampleSource.thing2)');
+			var type=transformer.getRuleType('$someFunction()');
 			expect(type).to.equal(Microwave.TYPE_SET_FUNCTION);
 		});
 		it('Should be able to recognize embedded functions',function () {
@@ -187,11 +187,16 @@ describe('Transformation',function(){
 	});
 	describe('Function execution',function(){
 		var transformer;
-		before(function(){
+		var processData;
+		before(function(done){
 			transformer=new Microwave();
 			transformer.addSource('itemToLoop',[{'bar':{'baz':10}},{'bar':{'baz':20}},{'bar':{'baz':30}}]);
 			transformer.addSource('someSortOfMap',{10:'ten',20:'twenty',30:'thirty'});
-
+			var plusOneFunction=function (currentIndex,currentItem,cb){
+				var val=currentItem.bar.baz;
+				cb(null,val+1);
+			}
+			transformer.addFunction('plusOne',plusOneFunction);
 			var squareFunction=function(currentIndex,currentItem,cb){
 
 				var val=currentItem.bar.baz;
@@ -204,23 +209,32 @@ describe('Transformation',function(){
 			var rule={
 				'squareOfBaz':squareFunction,
 				'theMapItem':mapFunction,
-				'constant':3
+				'constant':3,
+				'plus1':'$plusOne()'
 			};
 			var res=transformer.setRule(rule);
-
-		})
-		it('Should be able to execute a normal function',function(done){
 			transformer._processSourceItem(transformer.getSource('itemToLoop'),0,function(err,data){
-				if(err){
-					done(err);
-					return;
-				}
-				expect(data['constant']).to.equal(3);
-				expect(data['squareOfBaz']).to.equal(100);
-				expect(data['theMapItem']).to.equal('ten');
-				done();
+				processData=data;
+				done(err);
 			});
+		})
+		it('Should be able to get a constant',function(){
 
+				expect(processData['constant']).to.equal(3);
+		});
+
+		it('Should be able to execute a function that uses another source',function(){
+
+				expect(processData['theMapItem']).to.equal('ten');
+		});
+		it('Should be able to execute a normal function',function(){
+		
+				expect(processData['squareOfBaz']).to.equal(100);
+				
+
+		});
+		it('Should be able to execute a set function',function(){
+			expect(processData['plus1']).to.equal(11);
 		});
 		
 	});
