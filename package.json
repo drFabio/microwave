@@ -3,7 +3,7 @@
   "name": "microwave_etl",
   "license": "MIT",
   "description": "A Transformation tool from Pojo  to Pojo  for ETL purposes",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main":"index.js",
   "repository": {
     "type": "git",

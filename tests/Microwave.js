@@ -195,7 +195,7 @@ describe('Transformation',function(){
 		});
 	});
 	
-	describe.only('Function execution',function(){
+	describe('Function execution',function(){
 		var transformer;
 		var processData;
 		before(function(done){
@@ -230,7 +230,6 @@ describe('Transformation',function(){
 			});
 		})
 		it('Should be able to get a constant',function(){
-				console.log(processData);
 				expect(processData['constant']).to.equal(3);
 		});
 
@@ -251,6 +250,40 @@ describe('Transformation',function(){
 			expect(processData['nested']['object']).to.equal('foo');
 		})
 		
+	});
+	describe('#Multiple rules',function(){
+		var transformer;
+		var processData;
+		before(function(done){
+			transformer=new Microwave();
+	
+			transformer.addSource('itemToLoop',[{'bar':{'baz':10}},{'bar':{'baz':20}},{'bar':{'baz':30}}]);
+			
+			var ruleA={
+				'constant':3,
+				'item':'$CURRENT.bar'
+			};
+			var ruleB={
+				'otherConstant':'foo',
+				'otherItem':'$CURRENT.bar.baz'
+			};
+
+			transformer.addRule('a',ruleA);
+			transformer.addRule('b',ruleB);
+			
+			transformer._processSourceItem(transformer.getSource('itemToLoop'),0,function(err,data){
+				processData=data;
+				done(err);
+			});
+		});
+		it('Should be able to process multiple rules mantaining the scope',function(){
+			expect(processData.a).to.exist;
+			expect(processData.a.constant).to.equal(3);
+			expect(processData.a.item.baz).to.equal(10);
+			expect(processData.b).to.exist;
+			expect(processData.b.otherConstant).to.equal('foo');
+			expect(processData.b.otherItem).to.equal(10);
+		})
 	});
 	describe('#Proccess ',function(){
 		var transformer;
@@ -278,7 +311,7 @@ describe('Transformation',function(){
 				'constant':3,
 				'plus1':'$plusOne()'
 			};
-			var res=transformer.setRule(rule);
+			var res=transformer.addRule(rule);
 			done();
 		})
 		it('Should be able to execute the full process',function(done){
