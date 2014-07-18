@@ -20,13 +20,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+/**
+ * @todo return output as json
+ */
+var plainobjecttonestedobject=require('plainObjectToNestedObject');
 var async=require('async');
 var _=require('lodash');
 function Microwave(){
 	this._sources={};
 	this._output={};
 	this._functions={};
-	this._rule;
+	this._rules={};
 	/**
 	* List of all functions
 	*/
@@ -39,6 +43,7 @@ Microwave.TYPE_FUNCTION=3;
 Microwave.TYPE_SET_FUNCTION=4;
 Microwave.TYPE_STRING_ARRAY=5;
 Microwave.CONSTANT_CURRENT_INDEX='$';
+Microwave.CONSTANT_MAIN_RULE_NAME='$MAINRULE$';
 Microwave.CONSTANT_CURREM_ITEM='$CURRENT';
 /**
  * Matches $aa.bb $aa.$.foo $aa.$ $a.foo[$d.baz]
@@ -69,32 +74,36 @@ Microwave.prototype.addFunctions = function(funcs) {
 	}104
 	return true;
 };
-Microwave.prototype.setRule = function(rule) {
-	this._rule=rule;
-	this._parseRules();
+Microwave.prototype.addRule = function(name,rule) {
+	if(arguments.length==1){
+		rule=name;
+		name=Microwave.CONSTANT_MAIN_RULE_NAME;
+	}
+	this._rules[name]=rule;
+	this._parseRules(name);
 	return true;
 };
 /**
  * Parse the rules from the source
  * @return {[type]} [description]
  */
-Microwave.prototype._parseRules = function() {
-	this._parsedRules={};
+Microwave.prototype._parseRules = function(name) {
+	this._parsedRules[name]={};
 	var stringRulesMap={};
 	var rule;
-	for(var x in this._rule){
-		rule=this._rule[x];
+	for(var x in this._rules[name]){
+		rule=this._rules[name][x];
 		var type=this.getRuleType(rule);
 		//If it's not a string it's not a rule we should parse
 		if(type===Microwave.TYPE_SOURCE){
-			this._parsedRules[x]=this._getSourceHandlerFunctionFromString(rule);
+			this._parsedRules[name][x]=this._getSourceHandlerFunctionFromString(rule);
 		}
 		else if(type===Microwave.TYPE_FUNCTION){
-			this._parsedRules[x]=rule;
+			this._parsedRules[name][x]=rule;
 		}
 		else if(type===Microwave.TYPE_SET_FUNCTION){
 			var functionName=this.getFunctionCleanName(rule);
-			this._parsedRules[x]=this._functions[functionName];
+			this._parsedRules[name][x]=this._functions[functionName];
 		}
 	}
 
@@ -264,39 +273,37 @@ Microwave.prototype._isStringAnArray=function(rule){
 Microwave.prototype.isSourceSet = function(name) {
 	return !!this._sources[name];
 };
-Microwave.prototype._getproccessItenFunction = function(mainSource) {
-	var self=this;
-	return function(currentIndex,currentItem){
-		var keyToReturn;
-		var ruleToApply;
-		for(var x in self._rule){
-			keyToReturn=x;
-			ruleToApply=self._rule[x];
-
-		}
+Microwave.prototype._getReturnName = function(ruleName,itemRuleName) {
+	if(ruleName===Microwave.CONSTANT_MAIN_RULE_NAME){
+		return itemRuleName;
 	}
+	return ruleName+'.'+itemRuleName;
 };
 Microwave.prototype._processSourceItem = function(source,index,cb) {
 	var item=source[index];
-	var itemToRet={};//We will return a object to them
+	var plainObject={};//We will return a object to them
 	//Functions that we have to execute before the callback
 	var funcsToExecute={};
 	var fn;
-	for(var x in this._rule){
-		keyToReturn=x;
-		//THere is a rule to apply		
-		if(this._parsedRules[x]){
-			//Add the function to an async with the correct parameters
-			fn=async.apply(this._parsedRules[x],index,item);
-			funcsToExecute[x]=fn;
-		}
-		else{
-			//Its a value keep going
-			itemToRet[x]=this._rule[x];
+	var indexName;
+	for(var name in this._rules){
+		for(var x in this._rules[name]){
+			indexName=this._getReturnName(name,x);
+			keyToReturn=x;
+			//THere is a rule to apply		
+			if(this._parsedRules[name][x]){
+				//Add the function to an async with the correct parameters
+				fn=async.apply(this._parsedRules[name][x],index,item);
+				funcsToExecute[indexName]=fn;
+			}
+			else{
+				//Its a value keep going
+				plainObject[indexName]=this._rules[name][x];
+			}
 		}
 	}
 	if(_.isEmpty(funcsToExecute)){
-		cb(null,itemToRet);
+		cb(null,plainObject);
 		return;
 	}
 	else{
@@ -305,8 +312,9 @@ Microwave.prototype._processSourceItem = function(source,index,cb) {
 				cb(err);
 				return;
 			}
-			itemToRet=_.extend(itemToRet,data);
-			cb(null,itemToRet);
+			plainObject=_.extend(plainObject,data);
+			var nestedObject=plainobjecttonestedobject(plainObject);
+			cb(null,nestedObject);
 		});
 	}
 };
@@ -321,9 +329,6 @@ Microwave.prototype.execute = function(mainSource,cb) {
 		throw new Error('The source '+mainSource+' is not set');
 	}
 	var sourceToTransform=this._sources[mainSource];
-
-
-	var proccessItenFunction=this._getproccessItenFunction(mainSource);
 	var returnObject=[];
 	var currentIndex;
 	var getNextKey;

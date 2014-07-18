@@ -12,11 +12,13 @@
   "scripts": {
     "test": "mocha tests/Microwave.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "async": "*", 
+    "lodash": "*",
+    "plainObjectToNestedObject":"git://github.com/drFabio/plainObjectToNestedObject.git#master"
+  },
   "devDependencies": {
-     "chai":"*",
-     "async":"*",
-     "lodash":"*"
+     "chai":"*"
   },
   "optionalDependencies": {},
   "engines": {

@@ -70,12 +70,21 @@ describe('Transformation',function(){
 			var res=transformer.addFunctions(data);
 			expect(res).to.be.true;
 		});
-		it('Should be able to set a rule',function(){
+		it('Should be able to add  a named rule',function(){
 			var rule={
 				'number':10,
 				'name':'John doe'
 			};
-			var res=transformer.setRule(rule);
+			var res=transformer.addRule('rule',rule);
+			expect(res).to.be.true;
+
+		});
+		it('Should be able to add  a unnamed rule',function(){
+			var rule={
+				'number':10,
+				'name':'John doe'
+			};
+			var res=transformer.addRule(rule);
 			expect(res).to.be.true;
 
 		});
@@ -126,7 +135,7 @@ describe('Transformation',function(){
 			var type=transformer.getRuleType(function(){return 10});
 				expect(type).to.equal(Microwave.TYPE_FUNCTION);
 		});
-		it('Should be able to recognize string arrays',function () {
+		it.skip('Should be able to recognize string arrays',function () {
 			var type=transformer.getRuleType('[a,b,c,10,\'10\',$foo.bar]');
 				expect(type).to.equal(Microwave.TYPE_STRING_ARRAY);
 		});
@@ -185,7 +194,8 @@ describe('Transformation',function(){
 			});
 		});
 	});
-	describe('Function execution',function(){
+	
+	describe.only('Function execution',function(){
 		var transformer;
 		var processData;
 		before(function(done){
@@ -210,16 +220,17 @@ describe('Transformation',function(){
 				'squareOfBaz':squareFunction,
 				'theMapItem':mapFunction,
 				'constant':3,
-				'plus1':'$plusOne()'
+				'plus1':'$plusOne()',
+				'nested.object':'foo'
 			};
-			var res=transformer.setRule(rule);
+			var res=transformer.addRule(rule);
 			transformer._processSourceItem(transformer.getSource('itemToLoop'),0,function(err,data){
 				processData=data;
 				done(err);
 			});
 		})
 		it('Should be able to get a constant',function(){
-
+				console.log(processData);
 				expect(processData['constant']).to.equal(3);
 		});
 
@@ -236,6 +247,9 @@ describe('Transformation',function(){
 		it('Should be able to execute a set function',function(){
 			expect(processData['plus1']).to.equal(11);
 		});
+		it('Should be able to get a nested object',function(){
+			expect(processData['nested']['object']).to.equal('foo');
+		})
 		
 	});
 	describe('#Proccess ',function(){
