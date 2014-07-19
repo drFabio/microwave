@@ -221,7 +221,8 @@ describe('Transformation',function(){
 				'theMapItem':mapFunction,
 				'constant':3,
 				'plus1':'$plusOne()',
-				'nested.object':'foo'
+				'nested.object':'foo',
+				'currentItem':'$CURRENT.bar.baz'
 			};
 			var res=transformer.addRule(rule);
 			transformer._processSourceItem(transformer.getSource('itemToLoop'),0,function(err,data){
@@ -229,6 +230,7 @@ describe('Transformation',function(){
 				done(err);
 			});
 		})
+	
 		it('Should be able to get a constant',function(){
 				expect(processData['constant']).to.equal(3);
 		});
@@ -309,25 +311,30 @@ describe('Transformation',function(){
 				'squareOfBaz':squareFunction,
 				'theMapItem':mapFunction,
 				'constant':3,
-				'plus1':'$plusOne()'
+				'plus1':'$plusOne()',
+				'currentItem':'$CURRENT.bar.baz'
 			};
-			var res=transformer.addRule(rule);
+			var res=transformer.addRule('test',rule);
 			done();
 		})
 		it('Should be able to execute the full process',function(done){
 			transformer.execute('itemToLoop',function(err,data){
-				expect(data[0].constant).to.equal(3);
-				expect(data[1].constant).to.equal(3);
-				expect(data[2].constant).to.equal(3);
-				expect(data[0].plus1).to.equal(11);
-				expect(data[1].plus1).to.equal(21);
-				expect(data[2].plus1).to.equal(31);
-				expect(data[0].squareOfBaz).to.equal(100);
-				expect(data[1].squareOfBaz).to.equal(400);
-				expect(data[2].squareOfBaz).to.equal(900);
-				expect(data[0].theMapItem).to.equal('ten');
-				expect(data[1].theMapItem).to.equal('twenty');
-				expect(data[2].theMapItem).to.equal('thirty');
+				expect(data[0].test.constant).to.equal(3);
+				expect(data[1].test.constant).to.equal(3);
+				expect(data[2].test.constant).to.equal(3);
+
+				expect(data[0].test.plus1).to.equal(11);
+				expect(data[1].test.plus1).to.equal(21);
+				expect(data[2].test.plus1).to.equal(31);
+				expect(data[0].test.squareOfBaz).to.equal(100);
+				expect(data[1].test.squareOfBaz).to.equal(400);
+				expect(data[2].test.squareOfBaz).to.equal(900);
+				expect(data[0].test.theMapItem).to.equal('ten');
+				expect(data[1].test.theMapItem).to.equal('twenty');
+				expect(data[2].test.theMapItem).to.equal('thirty');
+				expect(data[0].test.currentItem).to.equal(10);
+				expect(data[1].test.currentItem).to.equal(20);
+				expect(data[2].test.currentItem).to.equal(30)
 				done();
 			});	
 		});

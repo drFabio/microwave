@@ -219,19 +219,21 @@ Microwave.prototype._getSourceHandlerFunctionFromComponents = function(sourceCom
 		if(isCurrentItem){
 			currentData=currentItem;
 		}
-		var walkComponent=function(){
-			var currentComponent=sourceComponents.shift();
+
+
+		var walkComponent=function(index){
+			var currentComponent=sourceComponents[index];
 			if(!currentComponent){
 				cb(null,currentData);
 			}
 			else{
 				self._getNextComponentItem(currentData,currentComponent,currentIndex,function(err,data){
 					currentData=data;
-					walkComponent();
+					walkComponent(index+1);
 				});
 			}
 		}
-		walkComponent();
+		walkComponent(0);
 	};	
 }
 Microwave.prototype.getRuleType = function(rule) {
