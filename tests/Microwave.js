@@ -116,6 +116,7 @@ describe('Transformation',function(){
 
 			expect(type).to.equal(Microwave.TYPE_SOURCE);
 		});
+		
 		it('Should be able to recognize a source value with the current index as index',function(){
 			var type=transformer.getRuleType('$myExampleSource.$.thing');
 
@@ -312,7 +313,8 @@ describe('Transformation',function(){
 				'theMapItem':mapFunction,
 				'constant':3,
 				'plus1':'$plusOne()',
-				'currentItem':'$CURRENT.bar.baz'
+				'currentItem':'$CURRENT.bar.baz',
+				'someItemThatShouldBeNull':'$CURRENT.bar.baz.notFound'
 			};
 			var res=transformer.addRule('test',rule);
 			done();
@@ -335,6 +337,7 @@ describe('Transformation',function(){
 				expect(data[0].test.currentItem).to.equal(10);
 				expect(data[1].test.currentItem).to.equal(20);
 				expect(data[2].test.currentItem).to.equal(30)
+				expect(data[0].test.someItemThatShouldBeNull).to.equal(null);
 				done();
 			});	
 		});

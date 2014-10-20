@@ -49,7 +49,7 @@ Microwave.CONSTANT_CURREM_ITEM='$CURRENT';
  * Matches $aa.bb $aa.$.foo $aa.$ $a.foo[$d.baz]
  * @type {RegExp}
  */
-Microwave.REGEX_SOURCE=/^\$[A-Za-z]\w*(\.(\w+|\$)|\[.*\]).*$/;
+Microwave.REGEX_SOURCE=/^\$[A-Za-z]\w*(\.([^\s\.\$]+|\$)|\[.*\]).*$/;
 Microwave.REGEX_FUNCTION=/^\$[A-Za-z]\w+\(\)$/;
 Microwave.REGEX_ARRAY=/^\[.*\]$/;
 
@@ -229,6 +229,10 @@ Microwave.prototype._getSourceHandlerFunctionFromComponents = function(sourceCom
 			else{
 				self._getNextComponentItem(currentData,currentComponent,currentIndex,function(err,data){
 					currentData=data;
+					if(typeof(currentData)=='undefined' || currentData==null){
+						cb(null,null);
+						return;
+					}
 					walkComponent(index+1);
 				});
 			}
